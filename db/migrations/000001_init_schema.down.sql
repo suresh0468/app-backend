@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS slokas;
+DROP TABLE IF EXISTS chapters;
