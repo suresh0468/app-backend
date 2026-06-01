@@ -20,7 +20,10 @@ func NewServer(store *db.Queries) *Server {
 
 	router.POST("/chapters", server.addChapter)
 	router.GET("/chapters", server.listChapters)
+	router.GET("/chapters/:id", server.getChapter)
 	router.GET("/chapters/:id/slokas", server.listSlokasByChapter)
+
+	router.POST("/slokas", server.addSloka)
 	router.GET("/slokas/:id", server.getSloka)
 
 	server.router = router

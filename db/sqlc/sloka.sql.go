@@ -7,6 +7,7 @@ package db
 
 import (
 	"context"
+	"database/sql"
 )
 
 const getSloka = `-- name: GetSloka :one
@@ -65,4 +66,45 @@ func (q *Queries) ListSlokasByChapter(ctx context.Context, chapterID int64) ([]S
 		return nil, err
 	}
 	return items, nil
+}
+
+const addSloka = `-- name: AddSloka :one
+INSERT INTO slokas (
+  chapter_id,
+  sloka,
+  transliteration,
+  purport,
+  explanation
+) VALUES (
+  $1, $2, $3, $4, $5
+)
+RETURNING id, chapter_id, sloka, transliteration, purport, explanation
+`
+
+type AddSlokaParams struct {
+	ChapterID       int64
+	Sloka           string
+	Transliteration string
+	Purport         sql.NullString
+	Explanation     sql.NullString
+}
+
+func (q *Queries) AddSloka(ctx context.Context, arg AddSlokaParams) (Sloka, error) {
+	row := q.db.QueryRowContext(ctx, addSloka,
+		arg.ChapterID,
+		arg.Sloka,
+		arg.Transliteration,
+		arg.Purport,
+		arg.Explanation,
+	)
+	var i Sloka
+	err := row.Scan(
+		&i.ID,
+		&i.ChapterID,
+		&i.Sloka,
+		&i.Transliteration,
+		&i.Purport,
+		&i.Explanation,
+	)
+	return i, err
 }
