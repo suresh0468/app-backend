@@ -1,0 +1,8 @@
+ALTER TABLE chapters
+RENAME COLUMN name TO title;
+
+ALTER TABLE chapters
+ADD COLUMN subtitle VARCHAR NOT NULL DEFAULT '';
+
+ALTER TABLE chapters
+ADD COLUMN description TEXT NOT NULL DEFAULT '';

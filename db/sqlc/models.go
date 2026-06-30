@@ -9,8 +9,10 @@ import (
 )
 
 type Chapter struct {
-	ID   int64
-	Name string
+	ID          int64
+	Title       string
+	Subtitle    string
+	Description string
 }
 
 type Sloka struct {

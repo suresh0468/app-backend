@@ -19,12 +19,15 @@ func NewServer(store *db.Queries) *Server {
 	router := gin.Default()
 
 	router.POST("/chapters", server.addChapter)
+	router.POST("/chapters/batch", server.addChapters)
 	router.GET("/chapters", server.listChapters)
 	router.GET("/chapters/:id", server.getChapter)
+	router.PATCH("/chapters/:id", server.updateChapter)
 	router.GET("/chapters/:id/slokas", server.listSlokasByChapter)
 
 	router.POST("/slokas", server.addSloka)
 	router.GET("/slokas/:id", server.getSloka)
+	router.PATCH("/slokas/:id", server.updateSloka)
 
 	server.router = router
 

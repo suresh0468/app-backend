@@ -21,3 +21,13 @@ INSERT INTO slokas (
   $1, $2, $3, $4, $5
 )
 RETURNING *;
+
+-- name: UpdateSloka :one
+UPDATE slokas
+SET
+  sloka           = COALESCE($2, sloka),
+  transliteration = COALESCE($3, transliteration),
+  purport         = COALESCE($4, purport),
+  explanation     = COALESCE($5, explanation)
+WHERE id = $1
+RETURNING *;
