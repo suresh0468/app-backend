@@ -11,22 +11,35 @@ import (
 
 const addChapter = `-- name: AddChapter :one
 INSERT INTO chapters (
-  name
+  title,
+  subtitle,
+  description
 ) VALUES (
-  $1
+  $1, $2, $3
 )
-RETURNING id, name
+RETURNING id, title, subtitle, description
 `
 
-func (q *Queries) AddChapter(ctx context.Context, name string) (Chapter, error) {
-	row := q.db.QueryRowContext(ctx, addChapter, name)
+type AddChapterParams struct {
+	Title       string
+	Subtitle    string
+	Description string
+}
+
+func (q *Queries) AddChapter(ctx context.Context, arg AddChapterParams) (Chapter, error) {
+	row := q.db.QueryRowContext(ctx, addChapter, arg.Title, arg.Subtitle, arg.Description)
 	var i Chapter
-	err := row.Scan(&i.ID, &i.Name)
+	err := row.Scan(
+		&i.ID,
+		&i.Title,
+		&i.Subtitle,
+		&i.Description,
+	)
 	return i, err
 }
 
 const getChapter = `-- name: GetChapter :one
-SELECT id, name
+SELECT id, title, subtitle, description
 FROM chapters
 WHERE id = $1
 LIMIT 1
@@ -35,12 +48,17 @@ LIMIT 1
 func (q *Queries) GetChapter(ctx context.Context, id int64) (Chapter, error) {
 	row := q.db.QueryRowContext(ctx, getChapter, id)
 	var i Chapter
-	err := row.Scan(&i.ID, &i.Name)
+	err := row.Scan(
+		&i.ID,
+		&i.Title,
+		&i.Subtitle,
+		&i.Description,
+	)
 	return i, err
 }
 
 const listChapters = `-- name: ListChapters :many
-SELECT id, name
+SELECT id, title, subtitle, description
 FROM chapters
 ORDER BY id
 LIMIT $1
@@ -61,7 +79,12 @@ func (q *Queries) ListChapters(ctx context.Context, arg ListChaptersParams) ([]C
 	items := []Chapter{}
 	for rows.Next() {
 		var i Chapter
-		if err := rows.Scan(&i.ID, &i.Name); err != nil {
+		if err := rows.Scan(
+			&i.ID,
+			&i.Title,
+			&i.Subtitle,
+			&i.Description,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -73,4 +96,38 @@ func (q *Queries) ListChapters(ctx context.Context, arg ListChaptersParams) ([]C
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateChapter = `-- name: UpdateChapter :one
+UPDATE chapters
+SET
+  title       = COALESCE($2, title),
+  subtitle    = COALESCE($3, subtitle),
+  description = COALESCE($4, description)
+WHERE id = $1
+RETURNING id, title, subtitle, description
+`
+
+type UpdateChapterParams struct {
+	ID          int64
+	Title       string
+	Subtitle    string
+	Description string
+}
+
+func (q *Queries) UpdateChapter(ctx context.Context, arg UpdateChapterParams) (Chapter, error) {
+	row := q.db.QueryRowContext(ctx, updateChapter,
+		arg.ID,
+		arg.Title,
+		arg.Subtitle,
+		arg.Description,
+	)
+	var i Chapter
+	err := row.Scan(
+		&i.ID,
+		&i.Title,
+		&i.Subtitle,
+		&i.Description,
+	)
+	return i, err
 }

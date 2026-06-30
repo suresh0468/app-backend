@@ -13,8 +13,19 @@ OFFSET $2;
 
 -- name: AddChapter :one
 INSERT INTO chapters (
-  name
+  title,
+  subtitle,
+  description
 ) VALUES (
-  $1
+  $1, $2, $3
 )
+RETURNING *;
+
+-- name: UpdateChapter :one
+UPDATE chapters
+SET
+  title       = COALESCE($2, title),
+  subtitle    = COALESCE($3, subtitle),
+  description = COALESCE($4, description)
+WHERE id = $1
 RETURNING *;

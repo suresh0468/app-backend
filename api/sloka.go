@@ -109,3 +109,67 @@ func (server *Server) addSloka(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, newSlokaResponse(sloka))
 }
+
+type updateSlokaUriRequest struct {
+	ID int64 `uri:"id" binding:"required,min=1"`
+}
+
+type updateSlokaBodyRequest struct {
+	Sloka           string `json:"sloka"`
+	Transliteration string `json:"transliteration"`
+	Purport         string `json:"purport"`
+	Explanation     string `json:"explanation"`
+}
+
+func (server *Server) updateSloka(ctx *gin.Context) {
+	var uri updateSlokaUriRequest
+	if err := ctx.ShouldBindUri(&uri); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	var body updateSlokaBodyRequest
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	// Fetch the current record so unchanged fields stay intact.
+	existing, err := server.store.GetSloka(ctx, uri.ID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	arg := db.UpdateSlokaParams{
+		ID:              uri.ID,
+		Sloka:           existing.Sloka,
+		Transliteration: existing.Transliteration,
+		Purport:         existing.Purport,
+		Explanation:     existing.Explanation,
+	}
+	if body.Sloka != "" {
+		arg.Sloka = body.Sloka
+	}
+	if body.Transliteration != "" {
+		arg.Transliteration = body.Transliteration
+	}
+	if body.Purport != "" {
+		arg.Purport = sql.NullString{String: body.Purport, Valid: true}
+	}
+	if body.Explanation != "" {
+		arg.Explanation = sql.NullString{String: body.Explanation, Valid: true}
+	}
+
+	sloka, err := server.store.UpdateSloka(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, newSlokaResponse(sloka))
+}
